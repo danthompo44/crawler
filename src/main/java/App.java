@@ -6,6 +6,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -16,8 +18,13 @@ public class App {
     private static final HttpClient client = HttpClient.newHttpClient();
     private static final WebBrowser browser = new WebBrowser(client);
     private static final URIQueue uriQueue = new URIQueue(new LinkedBlockingQueue<>());
-    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadPoolExecutor.AbortPolicy());
+    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(11, 11, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadPoolExecutor.AbortPolicy());
 
+    /**
+     * Parses CLI arguments and retrieves the given URL
+     * @param args The CLI args passed to the java program
+     * @return The URI given by the user in the CLI
+     */
     private static URI getUri(String[] args) {
         Options options = new Options();
         Option input = new Option("u", urlCliLong, true, "starting url");
@@ -39,7 +46,13 @@ public class App {
         }
     }
 
-    private static void startUrIWorker(){
+    /**
+     * Creates and starts a daemon thread, this thread monitors the uriQueue
+     * Once a URI is retrieved from the queue the daemon passes a WebWorker to
+     * the thread pool executor. The thread pool executor handles executing
+     * the tasks in threads.
+     */
+    private static void startURIWorker(){
         Thread thread = new Thread(() -> {
             while(true){
                 URI uri = uriQueue.poll();
@@ -55,17 +68,25 @@ public class App {
         thread.start();
     }
 
+    /**
+     * Retrieves the URI given by the user and adds it to the URI Queue
+     * Starts the URI worker then monitors the executor until no more tasks remain
+     * @param args CLI args given by the user executing this program
+     */
     public static void main(String[] args){
+        LocalDateTime start = LocalDateTime.now();
         URI uri = getUri(args);
+
         try {
             uriQueue.add(uri);
             logger.info("URI added {}", uri);
         } catch (VisitedURIException e) {
             throw new RuntimeException(e);
         }
-        startUrIWorker();
+        startURIWorker();
 
         try {
+            // Give the queue time to populate before we check the executor queue/active count
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -81,6 +102,8 @@ public class App {
             }
         }
 
-        logger.info("CRAWl COMPLETE");
+        LocalDateTime end = LocalDateTime.now();
+        logger.info("CRAWl COMPLETE. URL Count {}. Total Time {}", uriQueue.totalVisitedUris(), Duration.between(start, end));
+        executor.shutdown();
     }
 }

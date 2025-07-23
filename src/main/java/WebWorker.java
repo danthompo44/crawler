@@ -1,5 +1,6 @@
 import exceptions.VisitedURIException;
 import net.Browser;
+import net.WebBrowserException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -25,30 +26,36 @@ public class WebWorker implements Runnable{
 
     @Override
     public void run() {
-        String body = browser.get(uri);
-        Document doc = Jsoup.parse(body);
-        Elements links = doc.select("a[href]");
-        logger.info("URI: {} - {} links", uri, links.size());
+        try {
+            String body = browser.get(uri);
+            Document doc = Jsoup.parse(body);
+            Elements links = doc.select("a[href]");
+            logger.info("URI: {} - {} links", uri, links.size());
 
-        for (Element el: links){
-            String link = el.attr("href");
-            logger.debug("Current URI: {}, Link: {}", uri, link);
+            for (Element el: links){
+                String link = el.attr("href");
+                logger.debug("Current URI: {}, Link: {}", uri, link);
 
-            Pattern pattern = Pattern.compile("^/[a-zA-Z]");
-            Matcher matcher = pattern.matcher(link);
+                Pattern pattern = Pattern.compile("^/[a-zA-Z]");
+                Matcher matcher = pattern.matcher(link);
 
-            if (matcher.find()){
-                // Localised match
-                URI nextUri = null;
-                try {
-                    nextUri = URI.create(uri.getScheme() + "://" + uri.getHost() + link);
-                    queue.add(nextUri);
-                    logger.info("URI identified as internal, marked for crawl: {}", nextUri);
-                } catch (VisitedURIException e) {
-                    logger.debug("Skipping previously visited URI: {}", nextUri);
+                if (matcher.find()){
+                    // Localised match
+                    URI nextUri = null;
+                    try {
+                        nextUri = URI.create(uri.getScheme() + "://" + uri.getHost() + link);
+                        queue.add(nextUri);
+                        logger.info("URI identified as internal, marked for crawl: {}", nextUri);
+                    } catch (VisitedURIException e) {
+                        logger.debug("Skipping previously visited URI: {}", nextUri);
+                    }
                 }
             }
+            logger.debug("Located all {} links at URI: {}", links.size(), uri);
+        } catch (WebBrowserException e) {
+            logger.error(e);
         }
-        logger.debug("Located all {} links at URI: {}", links.size(), uri);
+
+
     }
 }

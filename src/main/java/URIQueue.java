@@ -1,12 +1,9 @@
 import exceptions.VisitedURIException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A wrapper class for a blocking queue, exposes two methods only.
@@ -33,5 +30,9 @@ public class URIQueue {
     public synchronized URI poll(){
         // Decrement the pending tasks
         return queue.poll();
+    }
+
+    public int totalVisitedUris() {
+        return visitedUris.size();
     }
 }
