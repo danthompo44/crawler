@@ -1,11 +1,10 @@
 package net;
 
+import exceptions.WebBrowserFailure;
 import io.github.resilience4j.retry.Retry;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -39,17 +38,17 @@ public class WebBrowser implements Browser {
      * @return The pages HTML if the request was successful
      * occurs
      */
-    public String get(URI uri) {
+    public synchronized String get(URI uri) {
         HttpGet req = new HttpGet(uri);
 
         // Use the Retry library from resilience4j to retry the request
-        return Retry.decorateSupplier(retry, () -> {
+        return retry.executeSupplier(() -> {
             try {
                 return client.execute(req, handler);
             }
             catch(IOException e){
-                throw new RuntimeException(e); // Trade off here - logs to console the exception
+                throw new WebBrowserFailure(e); // Trade off here - logs to console the exception
             }
-        }).get();
+        });
     }
 }
