@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.monzo.crawler.exceptions.WebBrowserFailure;
 
 import java.net.URI;
 import java.util.regex.Matcher;
@@ -46,7 +47,7 @@ public class WebWorker implements Runnable {
         try {
             nextUri = URI.create(uri.getScheme() + "://" + uri.getHost() + link);
             queue.add(nextUri);
-            logger.info("URI identified as internal, marked for crawl: {}", nextUri);
+            logger.debug("URI identified as internal, marked for crawl: {}", nextUri);
         } catch (VisitedURIException | IllegalArgumentException _) {
             logger.debug("Skipping previously visited URI: {}", nextUri);
         }
@@ -63,7 +64,7 @@ public class WebWorker implements Runnable {
             String body = browser.get(uri);
             Document doc = Jsoup.parse(body);
             Elements links = doc.select("a[href]");
-            logger.info("URI: {} - {} links", uri, links.size());
+            logger.info("URI: {} - Links: {}", uri, links.stream().map(e -> e.attr("href")).toList());
 
             for (Element el: links){
                 String link = el.attr("href");
@@ -77,7 +78,7 @@ public class WebWorker implements Runnable {
                 }
             }
             logger.debug("Located all {} links at URI: {}", links.size(), uri);
-        } catch (WebBrowserException e) {
+        } catch (WebBrowserFailure | WebBrowserException e) {
             logger.warn("Unable to crawl URL {}. Max retries encountered. Error: {}", uri, e.getMessage());
         }
     }

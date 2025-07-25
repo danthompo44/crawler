@@ -12,7 +12,7 @@ import java.util.concurrent.BlockingQueue;
  * Add and poll, for attempting to add a URI to the queue, and polling the queue
  */
 public class URIQueue {
-    private final List<URI> visitedUris = new ArrayList<>();
+    private final List<URI> visitedUris = new ArrayList<>(); // TRADE OFF - Memory overload here if URL count grows
     
     private final BlockingQueue<URI> queue;
     
