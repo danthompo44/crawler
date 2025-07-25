@@ -3,7 +3,7 @@ package org.monzo.crawler;
 import org.monzo.crawler.exceptions.VisitedURIException;
 import org.monzo.crawler.net.Browser;
 import org.monzo.crawler.net.URIQueue;
-import org.monzo.crawler.net.WebBrowserException;
+import org.monzo.crawler.exceptions.WebBrowserException;
 import org.monzo.crawler.net.WebWorker;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

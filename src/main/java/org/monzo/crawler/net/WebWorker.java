@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.monzo.crawler.exceptions.WebBrowserException;
 import org.monzo.crawler.exceptions.WebBrowserFailure;
 
 import java.net.URI;
