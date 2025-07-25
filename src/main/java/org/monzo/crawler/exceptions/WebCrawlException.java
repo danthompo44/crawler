@@ -1,4 +1,4 @@
-package exceptions;
+package org.monzo.crawler.exceptions;
 
 /**
  * An exception that extends runTime exception, and should be used to indicate a

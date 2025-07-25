@@ -1,6 +1,5 @@
-package net;
+package org.monzo.crawler.net;
 
-import java.io.IOException;
 import java.net.URI;
 
 public interface Browser {

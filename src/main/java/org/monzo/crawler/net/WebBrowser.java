@@ -1,6 +1,6 @@
-package net;
+package org.monzo.crawler.net;
 
-import exceptions.WebBrowserFailure;
+import org.monzo.crawler.exceptions.WebBrowserFailure;
 import io.github.resilience4j.retry.Retry;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;

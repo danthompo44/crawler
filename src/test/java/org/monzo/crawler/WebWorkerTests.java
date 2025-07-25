@@ -1,10 +1,10 @@
-package core;
+package org.monzo.crawler;
 
-import exceptions.VisitedURIException;
-import net.Browser;
-import net.URIQueue;
-import net.WebBrowserException;
-import net.WebWorker;
+import org.monzo.crawler.exceptions.VisitedURIException;
+import org.monzo.crawler.net.Browser;
+import org.monzo.crawler.net.URIQueue;
+import org.monzo.crawler.net.WebBrowserException;
+import org.monzo.crawler.net.WebWorker;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,7 @@
-package core;
+package org.monzo.crawler;
 
-import exceptions.VisitedURIException;
-import net.URIQueue;
+import org.monzo.crawler.exceptions.VisitedURIException;
+import org.monzo.crawler.net.URIQueue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

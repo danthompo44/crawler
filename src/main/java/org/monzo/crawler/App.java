@@ -1,11 +1,13 @@
-import exceptions.VisitedURIException;
-import exceptions.WebCrawlException;
+package org.monzo.crawler;
+
+import org.monzo.crawler.exceptions.VisitedURIException;
+import org.monzo.crawler.exceptions.WebCrawlException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import net.BrowserResponseHandler;
-import net.URIQueue;
-import net.WebBrowser;
-import net.WebWorker;
+import org.monzo.crawler.net.BrowserResponseHandler;
+import org.monzo.crawler.net.URIQueue;
+import org.monzo.crawler.net.WebBrowser;
+import org.monzo.crawler.net.WebWorker;
 import org.apache.commons.cli.*;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -45,13 +47,26 @@ public class App {
             CommandLine cmd = parser.parse(options, args);
             String url = cmd.getOptionValue(URI_CLI_LONG);
             logger.info("CRAWL REQUESTED, BASE URL: {}", url);
-            return URI.create(url);
+            URI uri = URI.create(url);
+            return cleanseUri(uri);
         }
         catch(ParseException e) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp(App.class.getName(), options);
             throw new WebCrawlException(e);
         }
+    }
+
+    /**
+     * Checks to see whether the URI has a scheme, if it does not it adds HTTPS
+     * @param uri The URI to be checked and cleansed
+     * @return A cleansed URI
+     */
+    private static URI cleanseUri(URI uri) {
+        if (uri.getScheme() == null) {
+            return URI.create("https://" + uri);
+        }
+        return uri;
     }
 
     /**
@@ -80,7 +95,7 @@ public class App {
 
     /**
      * Creates and starts a daemon thread, this thread monitors the uriQueue
-     * Once a URI is retrieved from the queue the daemon passes a net.WebWorker to
+     * Once a URI is retrieved from the queue, the daemon passes a WebWorker to
      * the thread pool executor. The thread pool executor handles executing
      * the tasks in threads.
      */

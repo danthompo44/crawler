@@ -1,6 +1,6 @@
-package net;
+package org.monzo.crawler.net;
 
-import exceptions.VisitedURIException;
+import org.monzo.crawler.exceptions.VisitedURIException;
 
 import java.net.URI;
 import java.util.ArrayList;

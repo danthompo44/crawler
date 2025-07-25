@@ -19,3 +19,4 @@ a multi-threaded approach to efficiently crawl websites while handling rate limi
 ## Building the Application
 
 To build the application, run:
+mvn exec:java -Dexec.mainClass=org.monzo.crawler.App "-Dexec.args=-u monzo.com"

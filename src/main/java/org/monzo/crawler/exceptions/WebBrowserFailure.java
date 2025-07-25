@@ -1,4 +1,4 @@
-package exceptions;
+package org.monzo.crawler.exceptions;
 
 /**
  * Represents a runtime exception that indicates a failure in the WebBrowser

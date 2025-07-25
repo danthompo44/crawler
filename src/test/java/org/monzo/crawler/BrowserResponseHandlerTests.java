@@ -1,6 +1,6 @@
-package core;
+package org.monzo.crawler;
 
-import net.BrowserResponseHandler;
+import org.monzo.crawler.net.BrowserResponseHandler;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpException;

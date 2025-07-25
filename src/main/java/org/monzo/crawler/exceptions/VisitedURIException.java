@@ -1,4 +1,4 @@
-package exceptions;
+package org.monzo.crawler.exceptions;
 
 /**
  * An exception thrown when a URI is visited more than once

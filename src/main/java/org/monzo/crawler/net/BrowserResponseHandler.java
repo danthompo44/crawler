@@ -1,4 +1,4 @@
-package net;
+package org.monzo.crawler.net;
 
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpException;

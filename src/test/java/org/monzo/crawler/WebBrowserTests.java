@@ -1,11 +1,11 @@
-package core;
+package org.monzo.crawler;
 
-import exceptions.WebBrowserFailure;
+import org.monzo.crawler.exceptions.WebBrowserFailure;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import net.Browser;
-import net.WebBrowser;
-import net.WebBrowserException;
+import org.monzo.crawler.net.Browser;
+import org.monzo.crawler.net.WebBrowser;
+import org.monzo.crawler.net.WebBrowserException;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
