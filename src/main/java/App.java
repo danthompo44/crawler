@@ -1,11 +1,17 @@
 import exceptions.VisitedURIException;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import net.BrowserResponseHandler;
 import net.WebBrowser;
 import org.apache.commons.cli.*;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.HttpException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -15,8 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class App {
     private static final Logger logger = LogManager.getLogger(App.class);
     private static final String urlCliLong = "url";
-    private static final HttpClient client = HttpClient.newHttpClient();
-    private static final WebBrowser browser = new WebBrowser(client);
+    private static final CloseableHttpClient client = HttpClients.createDefault();
     private static final URIQueue uriQueue = new URIQueue(new LinkedBlockingQueue<>());
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(11, 11, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadPoolExecutor.AbortPolicy());
 
@@ -47,12 +52,39 @@ public class App {
     }
 
     /**
+     * Creates the Retry config to be passed in to the WebBrowser.
+     *
+     * The retry will be wrapped around http requests by the browser to handle failures
+     * @return The applications retry config
+     */
+    private static Retry getRetryConfig() {
+        RetryConfig config = RetryConfig.<String>custom()
+                .maxAttempts(3)
+                .waitDuration(Duration.ofSeconds(2))
+                // Retry if an IO exception or 500 error
+                .retryOnException(e -> {
+                    if (e instanceof RuntimeException) {
+                        return true;
+                    }
+                    if (e instanceof HttpException) {
+                        return (e).getMessage().contains("500");
+                    }
+                    return false;
+                })
+                .build();
+
+        return Retry.of("webBrowserRetry", config);
+    }
+
+    /**
      * Creates and starts a daemon thread, this thread monitors the uriQueue
      * Once a URI is retrieved from the queue the daemon passes a WebWorker to
      * the thread pool executor. The thread pool executor handles executing
      * the tasks in threads.
      */
     private static void startURIWorker(){
+        final WebBrowser browser = new WebBrowser(client, new BrowserResponseHandler(), getRetryConfig());
+
         Thread thread = new Thread(() -> {
             while(true){
                 URI uri = uriQueue.poll();
@@ -75,6 +107,7 @@ public class App {
      */
     public static void main(String[] args){
         LocalDateTime start = LocalDateTime.now();
+        startURIWorker();
         URI uri = getUri(args);
 
         try {
@@ -83,7 +116,6 @@ public class App {
         } catch (VisitedURIException e) {
             throw new RuntimeException(e);
         }
-        startURIWorker();
 
         try {
             // Give the queue time to populate before we check the executor queue/active count
@@ -105,5 +137,10 @@ public class App {
         LocalDateTime end = LocalDateTime.now();
         logger.info("CRAWl COMPLETE. URL Count {}. Total Time {}", uriQueue.totalVisitedUris(), Duration.between(start, end));
         executor.shutdown();
+        try {
+            client.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

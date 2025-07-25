@@ -1,5 +1,6 @@
 package net;
 
+import java.io.IOException;
 import java.net.URI;
 
 public interface Browser {

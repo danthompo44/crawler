@@ -32,7 +32,7 @@ public class URIQueue {
         return queue.poll();
     }
 
-    public int totalVisitedUris() {
+    public synchronized int totalVisitedUris() {
         return visitedUris.size();
     }
 }

@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,16 +47,14 @@ public class WebWorker implements Runnable{
                         nextUri = URI.create(uri.getScheme() + "://" + uri.getHost() + link);
                         queue.add(nextUri);
                         logger.info("URI identified as internal, marked for crawl: {}", nextUri);
-                    } catch (VisitedURIException e) {
+                    } catch (VisitedURIException | IllegalArgumentException e) {
                         logger.debug("Skipping previously visited URI: {}", nextUri);
                     }
                 }
             }
             logger.debug("Located all {} links at URI: {}", links.size(), uri);
         } catch (WebBrowserException e) {
-            logger.error(e);
+            logger.warn("Unable to crawl URL {}. Max retries encountered. Error: {}", uri, e.getMessage());
         }
-
-
     }
 }
