@@ -21,7 +21,7 @@ public class WebBrowser implements Browser {
 
     /**
      * Creates a WebBrowser instance which can be used to send HTTP requests and retrieve the web pages content
-     * if a 200 code is receieved. handles retry logic if a >= 500 code is returned.
+     * if a 200 code is received. Handles retry logic if a >= 500 code is returned.
      * @param client The Closeable HttpClient to be used to send requests
      * @param retry The retry object to wrap the sending of the requests in a retry mechanism
      */

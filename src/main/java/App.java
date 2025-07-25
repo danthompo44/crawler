@@ -1,8 +1,11 @@
 import exceptions.VisitedURIException;
+import exceptions.WebCrawlException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import net.BrowserResponseHandler;
+import net.URIQueue;
 import net.WebBrowser;
+import net.WebWorker;
 import org.apache.commons.cli.*;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -20,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 public class App {
     private static final Logger logger = LogManager.getLogger(App.class);
-    private static final String urlCliLong = "url";
+    private static final String URI_CLI_LONG = "url";
     private static final CloseableHttpClient client = HttpClients.createDefault();
     private static final URIQueue uriQueue = new URIQueue(new LinkedBlockingQueue<>());
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(11, 11, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadPoolExecutor.AbortPolicy());
@@ -32,7 +35,7 @@ public class App {
      */
     private static URI getUri(String[] args) {
         Options options = new Options();
-        Option input = new Option("u", urlCliLong, true, "starting url");
+        Option input = new Option("u", URI_CLI_LONG, true, "starting url");
         input.setRequired(true);
         options.addOption(input);
 
@@ -40,20 +43,19 @@ public class App {
 
         try {
             CommandLine cmd = parser.parse(options, args);
-            String url = cmd.getOptionValue(urlCliLong);
+            String url = cmd.getOptionValue(URI_CLI_LONG);
             logger.info("CRAWL REQUESTED, BASE URL: {}", url);
             return URI.create(url);
         }
         catch(ParseException e) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp(App.class.getName(), options);
-            throw new RuntimeException(e);
+            throw new WebCrawlException(e);
         }
     }
 
     /**
      * Creates the Retry config to be passed in to the WebBrowser.
-     *
      * The retry will be wrapped around http requests by the browser to handle failures
      * @return The applications retry config
      */
@@ -78,7 +80,7 @@ public class App {
 
     /**
      * Creates and starts a daemon thread, this thread monitors the uriQueue
-     * Once a URI is retrieved from the queue the daemon passes a WebWorker to
+     * Once a URI is retrieved from the queue the daemon passes a net.WebWorker to
      * the thread pool executor. The thread pool executor handles executing
      * the tasks in threads.
      */
@@ -114,14 +116,14 @@ public class App {
             uriQueue.add(uri);
             logger.info("URI added {}", uri);
         } catch (VisitedURIException e) {
-            throw new RuntimeException(e);
+            throw new WebCrawlException(e);
         }
 
         try {
             // Give the queue time to populate before we check the executor queue/active count
             Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (InterruptedException _) {
+            Thread.currentThread().interrupt();
         }
 
         while(!executor.getQueue().isEmpty() || executor.getActiveCount() > 0){
@@ -129,8 +131,8 @@ public class App {
 
             try {
                 Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            } catch (InterruptedException _) {
+                Thread.currentThread().interrupt();
             }
         }
 
@@ -140,7 +142,7 @@ public class App {
         try {
             client.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new WebCrawlException(e);
         }
     }
 }

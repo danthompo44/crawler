@@ -1,3 +1,5 @@
+package net;
+
 import exceptions.VisitedURIException;
 
 import java.net.URI;
