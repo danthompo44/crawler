@@ -8,6 +8,7 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.Callable;
 
 /**
  * A web browser implementation used to send HTTP requests to URLs and retrieve
@@ -41,14 +42,23 @@ public class WebBrowser implements Browser {
     public synchronized String get(URI uri) {
         HttpGet req = new HttpGet(uri);
 
-        // Use the Retry library from resilience4j to retry the request
-        return retry.executeSupplier(() -> {
+        Callable<String> callable = () -> {
             try {
                 return client.execute(req, handler);
             }
             catch(IOException e){
                 throw new WebBrowserFailure(e); // Trade off here - logs to console the exception
             }
-        });
+        };
+
+        try {
+            return retry.executeCallable(callable);
+        }
+        catch(WebBrowserFailure e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new WebBrowserFailure(e);
+        }
     }
 }

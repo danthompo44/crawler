@@ -18,8 +18,7 @@ import java.net.URI;
 import java.time.Duration;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class WebBrowserTests {
     private static CloseableHttpClient clientMock;
